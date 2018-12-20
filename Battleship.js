@@ -8,6 +8,7 @@ document.getElementById("gameboard2").style.pointerEvents = "all";
 // get the container element
 var gameBoardContainer1 = document.getElementById("gameboard1");
 var gameBoardContainer2 = document.getElementById("gameboard2");
+// make the grids and append divs for each player
 function gameGridMaker() {
     // make the grid columns and rows
     for (var i = 0; i < columns.length; i++) {
@@ -46,7 +47,7 @@ function gameGrid2Maker() {
     }
 }
 gameGrid2Maker();
-var hitCount = 0;
+var hitCount = 0; // global score counter
 /* create the 2d array that will contain the status of each square on the board and place ships on the board
 */
 var gameBoard = [];
@@ -82,17 +83,12 @@ function fillShip(shipLength, board) {
 // Destroyer   - 3 hits
 // Submarine   - 3 hits
 // Patrol Boat - 2 hits
-var Carrier = 5;
-var Battleship = 4;
-var Destroyer = 3;
-var Submarine = 3;
-var PatrolBoat = 2;
+var Battleship = 5;
+var Destroyer = 4;
 // Spawning boats
-fillShip(Carrier, gameBoard);
 fillShip(Battleship, gameBoard);
 fillShip(Destroyer, gameBoard);
-fillShip(Submarine, gameBoard);
-fillShip(PatrolBoat, gameBoard);
+fillShip(Destroyer, gameBoard);
 // Spawned Boats
 // ensuring shipnumber
 var game_count = 0;
@@ -103,8 +99,8 @@ for (var i = 0; i < gameBoard.length; i++) {
         }
     }
 }
-if (game_count < 17) {
-    fillShip(Submarine, gameBoard);
+if (game_count < 14) {
+    fillShip(Destroyer, gameBoard);
     console.log("Extra ship deployed");
 }
 // ensured ship number
@@ -148,6 +144,7 @@ function fireMissile(e) {
     console.log("Pointer Events value:" + document.getElementById("gameboard2").style.pointerEvents);
     e.stopPropagation();
 }
+// COMPUTER BOARD SETUP AND AI FUNCTION
 var enemyHitCount = 0;
 var enemyHitCountView = document.getElementById("comp_score");
 /* create the 2d array that will contain the status of each square on the board and place ships on the board
@@ -159,10 +156,8 @@ for (var i = 0; i < 10; i++) {
 console.log("initialised Enemy Board");
 console.log(enemyGameBoard);
 // Spawning boats
-fillShip(Submarine, enemyGameBoard);
-fillShip(PatrolBoat, enemyGameBoard);
 fillShip(Destroyer, enemyGameBoard);
-fillShip(Carrier, enemyGameBoard);
+fillShip(Destroyer, enemyGameBoard);
 fillShip(Battleship, enemyGameBoard);
 // Spawned Boats
 // ensuring shipnumber
@@ -174,8 +169,8 @@ for (var i = 0; i < enemyGameBoard.length; i++) {
         }
     }
 }
-if (game_count2 < 17) {
-    fillShip(Submarine, enemyGameBoard);
+if (game_count2 < 14) {
+    fillShip(Destroyer, enemyGameBoard);
     console.log("Extra Enemy ship deployed");
 }
 // ensured ship number
@@ -187,27 +182,25 @@ var homing_col;
 var homing = false;
 function Computer_Turn() {
     console.log("Computer Turn !");
-    document.getElementById("gameboard2").style.pointerEvents = "all"; // player game pause
-    var countView = document.getElementById("comp_score");
-    // extract row and column # from the HTML element's id
-    var row = (Math.floor(Math.random() * 10));
+    // Freeze Player until all operations are complete.
+    document.getElementById("gameboard2").style.pointerEvents = "all";
+    // random positions on a 10 by 10 matrix
+    var row = (Math.floor(Math.random() * 10)); // numbers from 0 to 9
     var col = (Math.floor(Math.random() * 10));
     // store of all values for enemy board
     var idBank = [];
     for (var i = 0; i < 10; i++) {
+        // initialise the store of cells
         idBank.push(["0", "0", "0", "0", "0", "0", "0", "0", "0", "0"]);
     }
-    var bankIndex = Math.floor(Math.random() * 100);
+    // Assign all values for each cell in the matrix
     for (var i = 0; i < columns2.length; i++) {
         for (var j = 0; j < rows; j++) {
-            // push all possible values into array
+            // build the string for each cell ID
             var str = (columns[i] + j + i);
             idBank[j][i] = str;
         }
     }
-    console.log("idBank: " + idBank);
-    console.log(idBank);
-    console.log("bankIndex: " + bankIndex);
     // create a Bank of all untouched squares
     var clickedTiles = [];
     for (var i = 0; i < 10; i++) {
@@ -217,11 +210,8 @@ function Computer_Turn() {
             }
         }
     }
-    var clickedTileDex = (Math.floor(Math.random() * clickedTiles.length));
-    console.log("tiles unclicked: " + clickedTiles.length);
-    console.log(clickedTiles);
-    if (clickedTiles.includes(idBank[row][col])) // only click on valid tiles
-     {
+    // only chooses valid tiles
+    if (clickedTiles.includes(idBank[row][col])) {
         // caveat, the part only really increases the odds that the next choice is red, rather than making it certain
         // if homing 
         if (homing) {
@@ -279,7 +269,7 @@ function Computer_Turn() {
         console.log("Invalid Tile clicked, re rolling");
         Computer_Turn();
     } // Try again
-}
-//  GAME TURNS
+} // END OF COMPUTER TURN
+//  GAME TURNS ON CLICK
 gameBoardContainer2.addEventListener("click", fireMissile);
 gameBoardContainer2.addEventListener("click", Computer_Turn);
