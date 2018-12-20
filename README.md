@@ -1,8 +1,10 @@
 # Battleship
-Turnbased boardgame battleships in Typsecript
+Turnbased board-game battleships in Typescript
 
 # Setup
-~ Download and install typescript
+~ Download and install typescript 
+$ npm install -g typescript.
 
 # Run
-tsc Battleship.ts --watch
+$ tsc Battleship.ts --watch
+$ firefox index.html
