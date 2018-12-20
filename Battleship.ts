@@ -57,7 +57,7 @@ function gameGrid2Maker(){
 } gameGrid2Maker();
 
 
-var hitCount = 0;
+let hitCount:number = 0;
 
 /* create the 2d array that will contain the status of each square on the board and place ships on the board
 */
@@ -148,7 +148,7 @@ function fireMissile(e) {
             var countView:HTMLElement = document.getElementById("score");
             countView.textContent = "[ " + hitCount + " ]";
 			// this definitely shouldn't be hard-coded, but here it is anyway. lazy, simple solution:
-			if (hitCount == 17) {
+			if (hitCount == 14) {
 				alert("All enemy battleships have been defeated! You win!");
 			}
 			
@@ -162,8 +162,6 @@ function fireMissile(e) {
 	console.log("Pointer Events value:" + document.getElementById("gameboard2").style.pointerEvents);
     e.stopPropagation();
 }
-gameBoardContainer2.addEventListener("click", fireMissile);
-gameBoardContainer2.addEventListener("click", Computer_Turn);
 
 
 
@@ -181,8 +179,8 @@ gameBoardContainer2.addEventListener("click", Computer_Turn);
 
 
 
-var enemyHitCount = 0;
-
+let enemyHitCount = 0;
+let enemyHitCountView:HTMLElement = document.getElementById("comp_score");
 /* create the 2d array that will contain the status of each square on the board and place ships on the board
 */
 
@@ -216,79 +214,134 @@ if(game_count2 < 17){ fillShip(Submarine, enemyGameBoard); console.log("Extra En
 
 
 console.log("Filled Enemy Board !");
-console.log(gameBoard);
+console.log(enemyGameBoard);
 
 
-function Computer_Turn(e){
+
+// COMUTERS GAME BOARD
+let homing_row:number;
+let homing_col:number;
+let homing:boolean = false;
+function Computer_Turn(){
 	console.log("Computer Turn !");
-	document.getElementById("gameboard2").style.pointerEvents = "all";
-
+		document.getElementById("gameboard2").style.pointerEvents = "all"; // player game pause
+		let countView:HTMLElement = document.getElementById("comp_score");
         // extract row and column # from the HTML element's id
 		let row:number = (Math.floor(Math.random() * 10));
 		let col:number = (Math.floor(Math.random() * 10));
 
-		let idBank:string[] = [];
+		// store of all values for enemy board
+		let idBank:string[][] = [] ;
+		for(let i = 0 ; i < 10 ; i++){
+			idBank.push(["0","0","0","0","0","0","0","0","0","0"]);
+		}
+
 		let bankIndex = Math.floor(Math.random() * 100) ;
 		for (let i = 0; i < columns2.length; i++) {
 			for (let j = 0; j < rows; j++) {
-				// create a new string array
-				
-				// push all possible values
+				// push all possible values into array
 				let str = (columns[i] + j + i) as string;
-				idBank.push(str);	
+				idBank[j][i] = str;	
 			}
 		}
-		console.log("idBank: "+ idBank[0]);
-		console.log("bankIndex: "+bankIndex);
-		let col_row_Str:string = idBank[bankIndex] ;
-		console.log("col_row_Str: " + col_row_Str);
+		console.log("idBank: "+ idBank);
+		console.log(idBank);
+		console.log("bankIndex: "+ bankIndex);
+
+		// create a Bank of all untouched squares
+		let clickedTiles:string[] = [];
+		for(let i = 0 ; i < 10 ; i++){
+			for(let j = 0 ; j < 10 ; j++){
+				if (enemyGameBoard[j][i] == 0 || enemyGameBoard[j][i] == 1){
+					clickedTiles.push(idBank[j][i]); //
+				}
+			}
+		}
+		let clickedTileDex:number = (Math.floor(Math.random() * clickedTiles.length));
+		console.log("tiles unclicked: "+clickedTiles.length);
+		console.log(clickedTiles);
+		
+		
 		
 
-		
-		// if player clicks a square with no ship, change the color and change square's value
-		if ( enemyGameBoard[row][col] == 0 || enemyGameBoard[row][col] == 3 ) {
-			console.log("gamboard children value : " );
-			document.getElementById(col_row_Str).style.background = '#bbb';
-			// set this square's value to 3 to indicate that they fired and missed
-			enemyGameBoard[row][col] = 3;
-		
-		}
-		// if player clicks a square with a ship, change the color and change square's value 
-		else if (enemyGameBoard[row][col] == 1) {
-			document.getElementById(col_row_Str).style.background = 'red';
-			// set this square's value to 2 to indicate the ship has been hit
-			enemyGameBoard[row][col] = 2;
-			
-			// increment hitCount each time a ship is hit
-            enemyHitCount++;
-            let countView:HTMLElement = document.getElementById("comp_score");
-			countView.textContent = "[ " + enemyHitCount + " ]";
-			
-			
-			if(enemyGameBoard[row+1][col] == 1 || enemyGameBoard[row][col+1] == 1){ // consequtive hits !
-				document.getElementById(col_row_Str).style.background = 'red';
-				// set this square's value to 2 to indicate the ship has been hit
-				enemyGameBoard[row][col] = 2;
-				
-				// increment hitCount each time a ship is hit
+
+
+
+		if(clickedTiles.includes(idBank[row][col]) ) // only click on valid tiles
+		{
+
+		// caveat, the part only really increases the odds that the next choice is red, rather than making it certain
+		// if homing 
+		if ( homing ){
+			let flip = (Math.floor(Math.random() * 3));
+			// set red
+			if (enemyGameBoard[homing_row][homing_col] == 1 ) {
+				document.getElementById(idBank[homing_row][homing_col]).style.background = 'red';
+				// set this square's value to 2 to indicate that they fired and hit !
+				enemyGameBoard[homing_row][homing_col] = 2;
+				// increment enemy score
 				enemyHitCount++;
-				countView.textContent = "[ " + enemyHitCount + " ]";
+				enemyHitCountView.textContent = "[ " + enemyHitCount + " ]";
+				// start Tracking by setting homing targets;
+				homing_col = col>=9? col-flip: col+flip; // search randomly nearby
+				homing_row = row>=9? row-flip: row+flip;
+				homing = true;
+			}// if its a miss after homing 
+			else if( enemyGameBoard[homing_row][homing_col] == 0){
+				document.getElementById(idBank[homing_row][homing_col]).style.background = '#bbb';
+				// set this square's value to 3 to indicate that they fired and missed
+				enemyGameBoard[homing_row][homing_col] = 3;
+				// set homing values back to random
+				homing_col = col;
+				homing_row = row;
+				homing = false;
+			} else if (enemyGameBoard[homing_row][homing_col] == 3 && document.getElementById(idBank[homing_row][homing_col]).style.background == '#bbb') {
+				document.getElementById(idBank[homing_row][homing_col]).style.background = '#bbb';
+				// set this square's value to 3 to indicate that they fired and missed
+				enemyGameBoard[homing_row][homing_col] = 3;
 			}
-
-			if (enemyHitCount == 17) {
-				alert("All Your battleships have been defeated! You Lost ! :( ");
-			}
-		// if player clicks a square that's been previously hit, let them know
-		} 
-		// else if (gameBoard[row][col] > 1) {
-		// 	alert("Stop wasting your torpedos! You already fired at this location.");
-		// }		
-	
+		}
 
 
 
-	e.stopPropagation();
+
+
+
+
+
+			//Random guesses
+			// empty tile
+			if ( enemyGameBoard[row][col] == 0 ) { //
+				document.getElementById(idBank[row][col]).style.background = '#bbb';
+				// set this square's value to 3 to indicate that they fired and missed
+				enemyGameBoard[row][col] = 3;
+			} 
+			else if(enemyGameBoard[row][col] == 1) // ship tile
+			{ 
+				document.getElementById(idBank[row][col]).style.background = 'red';
+				// set this square's value to 2 to indicate that they fired and hit !
+				enemyGameBoard[row][col] = 2;
+				// increment enemy score
+				enemyHitCount++;
+				enemyHitCountView.textContent = "[ " + enemyHitCount + " ]";
+				// start Tracking by setting homing targets;
+				homing_col = col>=9? col-1: col+1;
+				homing_row = row>=9? row-1: row+1;
+				homing = true;
+			} 
+			
+
+
+		} else { 
+			console.log("Invalid Tile clicked, re rolling");
+			
+			Computer_Turn();
+		}// Try again
+		
 }
 
 
-// COMUTERS GAME BOARD
+
+//  GAME TURNS
+gameBoardContainer2.addEventListener("click", fireMissile);
+gameBoardContainer2.addEventListener("click", Computer_Turn);
