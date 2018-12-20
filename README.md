@@ -5,5 +5,6 @@ Turnbased board-game battleships in Typescript
 $ npm install -g typescript.
 
 # Run
-$ tsc Battleship.ts --watch
+$ tsc Battleship.ts --watch ;\n
+
 $ firefox index.html
